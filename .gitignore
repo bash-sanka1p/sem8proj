@@ -1,0 +1,8 @@
+.vscode/
+Reference/
+cv2_classifiers/*
+*.db
+
+!cv2_classifiers/haarcascade_frontalface_alt2.xml
+!cv2_classifiers/haarcascade_frontalface_default.xml
+
