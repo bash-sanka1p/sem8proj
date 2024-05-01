@@ -12,11 +12,13 @@ face_ds_path = r"./faces"
 
 def registerFace(face_img_path="",user_id="unidentified"):
     print("[+] Face Registration In Progress. User Id :", user_id)
+    print("face_ds_path: ",face_ds_path)
+    
     try:
         # first chek if the db exists or not and also if the use is present or not
         with sqlite3.connect("face_data.db") as db:
             cursor = db.cursor()
-            schema = """ ID INTEGER PRIMARY KEY AUTOINCREMENT, 
+            schema = """ID INTEGER PRIMARY KEY AUTOINCREMENT, 
                     user_id NVARCHAR(30),
                     face_encoding BLOB """
             cursor.execute(f"CREATE TABLE IF NOT EXISTS faces ({schema})")
@@ -30,8 +32,12 @@ def registerFace(face_img_path="",user_id="unidentified"):
             return {"message":"Already Registered"}
         else:
             face_img = fr.load_image_file(face_img_path)
-            face_encoding = fr.face_encodings(face_img,num_jitters=70,model="large")[0]
+            # print(face_img)
+            face_locations=detectFaces(face_img_path)
+            print("[+] Training")
+            face_encoding = fr.face_encodings(face_img,face_locations,num_jitters=70,model="large")[0]
             # data = {"id":user_id, "face_encoding":face_encoding}
+            # print(data)
             #storing face_encoding and label in db
             with sqlite3.connect("face_data.db") as db:
                 cursor = db.cursor()
@@ -47,6 +53,30 @@ def registerFace(face_img_path="",user_id="unidentified"):
     except Exception as e:
         print("[-] Error while registering face !!!",e)
         return {"message":"ERROR"},500
+
+def detectFaces(face_img_path)->list:
+    image = cv2.imread(face_img_path, cv2.COLOR_BGR2GRAY)
+    face_locations=[]
+    face_classifier=cv2.CascadeClassifier(r"./cv2_classifiers/haarcascade_frontalface_alt2.xml")
+    faces = face_classifier.detectMultiScale(cv2.cvtColor(image,cv2.COLOR_BGR2GRAY), scaleFactor=1.1, minNeighbors=5) # output (x, y, w, h)
+
+    print(f"[+] {len(faces)} faces detected.")
+    for (x,y,w,h) in faces:
+        # print(x,y,w,h)
+        #expanding the bounding box by 7 percent from each side. that is over all 14 percent.
+        x_offset = int(w * 0.1)  
+        y_offset = int(h * 0.1)   
+        x = max(0, x - x_offset)  
+        y = max(0, y - y_offset)  
+        w = w + 2 * x_offset
+        h = h + 2 * y_offset
+        
+        top = y
+        right = x + w
+        bottom = y + h
+        left = x
+        face_locations.append([top, right, bottom, left])
+    return face_locations
 
 
 def getFaceEncodings():
@@ -82,9 +112,9 @@ def returnSuggestions(image_path=None):
     user_ids, db_face_encodings = getFaceEncodings().values()
     # print("db_face_encodings:",db_face_encodings)
     # print(type(db_face_encodings[0]))
-    face_classifier=cv2.CascadeClassifier(r"./cv2_classifiers/haarcascade_frontalface_alt2.xml")
-
+    
     face_locations=[]
+    face_classifier=cv2.CascadeClassifier(r"./cv2_classifiers/haarcascade_frontalface_alt2.xml")
     faces = face_classifier.detectMultiScale(cv2.cvtColor(image,cv2.COLOR_BGR2GRAY), scaleFactor=1.1, minNeighbors=5) # output (x, y, w, h)
 
     print(f"[+] {len(faces)} faces detected.")
@@ -156,16 +186,19 @@ def main():
     # registerFace(os.path.join(face_ds_path,"@anish.jpg"), "@anish")
     # registerFace(os.path.join(face_ds_path,"@bhagyashree.jpg"), "@bhagyashree")
     # registerFace(os.path.join(face_ds_path,"@om.jpg"), "@om")
-    registerFace(os.path.join(face_ds_path,"@avikalp.jpg"), "@avikalp")
+    # registerFace(os.path.join(face_ds_path,"@avikalp.jpg"), "@avikalp")
+    # registerFace(os.path.join(face_ds_path,"@rishabh.jpg"), "@rishabh")
     
+    # print(os.path.join(face_ds_path,"@rishabh.jpg"))
     # getFaceEncodings()
-    for i in range(1,7):
-        path = fr"./group_photos/{i}.jpg"
-        print("Current Image: ",path)
-        returnSuggestions(path)
-        
-    # returnSuggestions("./group_photos/2.jpg")
+
+    # for i in range(1,7):
+    #     path = fr"./group_photos/{i}.jpg"
+    #     print("Current Image: ",path)
+    #     returnSuggestions(path)
     
+    # path = fr"./faces/@om.jpg"
+    # returnSuggestions(path)
     pass
 
 
