@@ -32,6 +32,15 @@ os.makedirs(face_ds_path, exist_ok=True)
 os.makedirs(post_ds_path, exist_ok=True)
 os.makedirs(post_prediction_path, exist_ok=True)
 
+@app.get("/")
+def homePage() :
+    message = """
+    <htmL>
+    <h1> HomePage</h1>
+    </html>
+    """
+    return message
+
 @app.post("/register-face")
 def registerFace(face_img_path="",user_id="unidentified"):
     data = request.form
@@ -51,7 +60,7 @@ def registerFace(face_img_path="",user_id="unidentified"):
         face_img = fr.load_image_file(face_img_path)
         face_locations=detectFaces(face_img_path)
         print("[+] Training...")
-        face_encoding = fr.face_encodings(face_img,face_locations,num_jitters=1,model="large")[0]
+        face_encoding = fr.face_encodings(face_img,face_locations,num_jitters=25,model="large")[0]
         # data = {"id":user_id, "face_encoding":face_encoding}
 
         # saving face encoding to db
@@ -183,6 +192,7 @@ def saveImage(image_data,save_folder_path):
     print("[+] Saving Bytes To Image ...")
     # Converting encoded string to image
     try:
+        print("imagedata:", image_data[:20])
         header, encoded_img_data = image_data.split(',', 1)
         format = header.split('/')[1].split(";")[0]
     except ValueError:
@@ -259,5 +269,5 @@ def main():
 
 
 if __name__=="__main__":
-    app.run(host="0.0.0.0",port=4488,debug=True)
+    app.run(host="0.0.0.0",port=4488)#,debug=True)
     # main()
