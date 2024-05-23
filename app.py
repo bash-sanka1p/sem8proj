@@ -114,7 +114,7 @@ def returnSuggestions():
         left = x
         face_locations.append([top, right, bottom, left])
     
-    image_face_encodings = fr.face_encodings(image, face_locations,num_jitters=1,model="large")
+    image_face_encodings = fr.face_encodings(image, face_locations,num_jitters=5,model="large")
     # print("image_face_encodings:", image_face_encodings)
     im = image.copy()
     output=[]
