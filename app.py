@@ -60,7 +60,7 @@ def registerFace(face_img_path="",user_id="unidentified"):
         face_img = fr.load_image_file(face_img_path)
         face_locations=detectFaces(face_img_path)
         print("[+] Training...")
-        face_encoding = fr.face_encodings(face_img,face_locations,num_jitters=25,model="large")[0]
+        face_encoding = fr.face_encodings(face_img,face_locations,num_jitters=30,model="large")[0]
         # data = {"id":user_id, "face_encoding":face_encoding}
 
         # saving face encoding to db
